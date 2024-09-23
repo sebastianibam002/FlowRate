@@ -8,6 +8,10 @@ from scipy import stats
 # Style used for the graphs, you can pick any other styles available
 plt.style.use('ggplot')
 
+# get the system os
+
+WINDOWS = (os.name == 'nt')
+
 
 # Files of excel name (relative path)
 TIMES_FILE = "emission_rates.xlsx"
@@ -105,7 +109,7 @@ def plot_concentration(data, start_time: str, end_time: str, mID, ethane, volume
     ax.set_ylabel("$CH_4 [ppm]$")
     plt.legend()
     plt.tight_layout()
-    plt.savefig(f"{OUT}/{mID[:1]}\\plot_concentration{mID}.png")
+    plt.savefig(f"{OUT}{mID[:1]}/plot_concentration{mID}.png")
     plt.close()
         
     
@@ -151,24 +155,24 @@ def load_day(day: str, correct_time:bool=True):
 
     # I will use regular expression to get the files that have the following format
     # One day after
-    pprev =  rf"Pico\d+_{(day + pd.Timedelta(1, 'day')).strftime("%y%m%d")}_\d+\.txt"
+    pprev =  rf"Pico\d+_{(day + pd.Timedelta(1, 'day')).strftime('%y%m%d')}_\d+\.txt"
     # The day of the measurements
-    pday = rf"Pico\d+_{day.strftime("%y%m%d")}_\d+\.txt"
+    pday = rf"Pico\d+_{day.strftime('%y%m%d')}_\d+\.txt"
     # The day before
-    pnex =  rf"Pico\d+_{(day - pd.Timedelta(1, 'day')).strftime("%y%m%d")}_\d+\.txt"
+    pnex =  rf"Pico\d+_{(day - pd.Timedelta(1, 'day')).strftime('%y%m%d')}_\d+\.txt"
 
     # The reason behind, UTC time is the standard for the Aeris files
 
     for element in ls:
         if re.match(pprev, element) or re.match(pday, element) or re.match(pnex, element) :
             # sometimes Aeris gives an extra column, so just take the first 16
-            df = pd.read_csv(f"{AERISLOC}/{element}")
+            df = pd.read_csv(f"{AERISLOC}/{element}", delimiter='\t')
             
-            if df.shape[1] > 16:
+            #if df.shape[1] > 16:
                 # file is broken, take first 16
-                df = pd.read_csv(f"{AERISLOC}/{element}", usecols=list(range(1, 17)))
-            else:
-                df.set_index('Time Stamp', inplace=True)
+            #    df = pd.read_csv(f"{AERISLOC}/{element}", usecols=list(range(1, 17)))
+            #else:
+            df.set_index('Time Stamp', inplace=True)
             df['Time Stamp'] = pd.to_datetime(df.index)
             if correct_time:
                 if df['Time Stamp'].iloc[0] <= pd.to_datetime("March 10, 2024"):
@@ -223,7 +227,7 @@ if __name__ == "__main__":
     result_df = process_files_for_flow_rate(df_times)
     
     # Save the result to a CSV file for further analysis
-    result_df.to_csv(f"{OUT}/computed_flow_rates.csv", index=False)
+    result_df.to_csv(f"{OUT}computed_flow_rates.csv", index=False)
     print("Flow rate computation completed. Results saved to computed_flow_rates.csv")
 
 
