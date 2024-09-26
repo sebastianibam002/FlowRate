@@ -166,21 +166,26 @@ def load_day(day: str, correct_time:bool=True):
     for element in ls:
         if re.match(pprev, element) or re.match(pday, element) or re.match(pnex, element) :
             # sometimes Aeris gives an extra column, so just take the first 16
-            df = pd.read_csv(f"{AERISLOC}/{element}", delimiter='\t')
-            
-            #if df.shape[1] > 16:
+            df = pd.read_csv(f"{AERISLOC}/{element}")
+            # print(df['Time Stamp'].iloc[0])
+            if "Time Stamp" in df.columns and df['Time Stamp'].iloc[2] == 0:
+                # print(f"check: {element}")
                 # file is broken, take first 16
-            #    df = pd.read_csv(f"{AERISLOC}/{element}", usecols=list(range(1, 17)))
-            #else:
-            df.set_index('Time Stamp', inplace=True)
+                df = pd.read_csv(f"{AERISLOC}/{element}", usecols=list(range(1, 17)))
+                # df['Time Stamp'] = pd.to_datetime(df.index)
+            else:
+                # print(f"Otro {element}")
+                df.set_index('Time Stamp', inplace=True)
             df['Time Stamp'] = pd.to_datetime(df.index)
+
             if correct_time:
                 if df['Time Stamp'].iloc[0] <= pd.to_datetime("March 10, 2024"):
                     df['Time Stamp'] = df['Time Stamp'] + pd.Timedelta(6, 'h')
                 else:
                     df['Time Stamp'] = df['Time Stamp'] + pd.Timedelta(7, 'h')
             ls_df.append(df)
-    return pd.concat(ls_df, axis=0, ignore_index=True)
+    val_res = pd.concat(ls_df, axis=0, ignore_index=True)
+    return val_res
 
 
 
@@ -229,7 +234,7 @@ if __name__ == "__main__":
     # Save the result to a CSV file for further analysis
     result_df.to_csv(f"{OUT}computed_flow_rates.csv", index=False)
     print("Flow rate computation completed. Results saved to computed_flow_rates.csv")
-
+    #print(load_day(pd.to_datetime("2024-08-26  00:00:00"), correct_time=True))
 
 
 
